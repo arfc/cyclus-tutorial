@@ -17,24 +17,22 @@ from pyne import nucname
 
 def write_csv(header, raw_input, filename='csv-data.csv'):
     """
-    ***Warning!  This function will check to see if there is already
-    a file 'filename' in the current directory,
-    and if one is found it will be deleted.  Please be aware of this
-    when choosing file names.***
+    Warning:  If filename already exists in the current directory
+        it will be deleted.
 
     Function will write a csv file given the header, data,
-    and the desired name of the csv file
-    to be made.
+    and a filename to write to.
 
-    Input:
-    header: a list, all strings, of the headers for the csv file
+    Parameters:
+    header: a listof strings. Headers for the csv file
     data_input: data to be added to csv file - see note below
-    filename: optional - the desired output file name, default: 'csv-data.csv'
+    filename: optional - the desired output file name,
+        default: 'csv-data.csv'
 
-    Output:
-    none in the script, but in your working directory, you should find the file
+    Return:
+    none
 
-    note:  this function expects raw data in the form of
+    note:  raw data should be in the form
     [[a1, a2, ... , aN],[b1, b2, ... ,bN]...[n1, n2, nN]],
     but it will put this data in the form of
     [[a1,b1,...,n1],[a2,b2,...,n2],...,[aN,bN,...,nN]] before
@@ -46,17 +44,9 @@ def write_csv(header, raw_input, filename='csv-data.csv'):
 
     """
 
-    # checks to see if the file "filename" already exists in the
-    # current directory.  If it does,
-    # it is deleted.
     if os.path.exists('./' + filename) is True:
         os.remove(filename)
 
-    # next, it checks to see if the raw data is a series of lists,
-    # or just one set of data.
-    # if the raw input is a series of lists, it is first re-organized
-    # into a list of lists where each
-    # element contains the data of a single reactor.
     if isinstance(raw_input[0], list):
 
         data_input = []
@@ -69,18 +59,12 @@ def write_csv(header, raw_input, filename='csv-data.csv'):
                 placeholder = raw_input[index]
                 data_input[element].append(placeholder[element])
 
-        # once it is in the right format, it is written to the csv file.
         with open(filename, 'a+') as file:
             w = csv.writer(file)
             w.writerow(header)
             for element in range(len(data_input)):
                 w.writerow(data_input[element])
 
-    # if the first element was not a list, it means the raw
-    # input contains the data for only
-    # one reactor, and does not need to be reorganized.
-    # Instead, the raw input is directly written
-    # to the csv file.
     else:
         with open(filename, 'a+') as file:
             w = csv.writer(file)
@@ -92,26 +76,18 @@ def import_csv(csv_file):
     """
     Function imports the contents of a csv file as a dataframe.
 
-    Input:
-    csv_file: name of the csv file of interest.
+    Parameters
+    ----------
+    csv_file: name of the csv file.
 
-    Output:
-    reactor_data: the data contained in the csv file as a dataframe
 
-    note:  this function requires pandas imported as pd
+    Returns
+    -------
+    data_df: dataframe. Note the names setting.
 
     """
 
-    # This function takes the contents of the csv file and reads
-    # them into a dataframe.  One important thing to note is that
-    # the functions used later, specifically write_reactor and
-    # write_region, expect that the header name for country, reactor name,
-    # reactor type, net electric capacity, and operator are 'Country',
-    # 'Reactor Name', 'Type', 'Net Electric Capacity', and 'Operator,
-    # respectively.  These headers are used to find values within the
-    # dataframe.
-
-    reactor_data = (
+    data_df = (
         pd.read_csv(
             csv_file,
             names=[
@@ -122,53 +98,44 @@ def import_csv(csv_file):
                 'Operator'],
             skiprows=[0]))
 
-    return reactor_data
+    return data_df
 
 
 def recipe_dict(fresh_id, fresh_comp, spent_id, spent_comp):
     """
-    Function takes recipes for fresh and spent fuel, split into
-    lists of isotope names and compostions, and
-    organizes them into a dictionary in the key:value format
+    Function takes lists of isotope names and compostions
+    for fresh and spent fuel, and creates a dictionary.
 
-    Input:
+    Parameters
+    ----------
     fresh_id: isotope names in fresh fuel
     fresh_comp: isotope compositions in fresh fuel
-    spent_id: isotope compostions in spent fuel
-    spent_id: isotope compostions in spent fuel
+    spent_id: isotope names in spent fuel
+    spent_comp: isotope compostions in spent fuel
 
-    note:  the overall isotope order doesn't matter, or their
-    number, but the order of isotopes
-    in the id list should be the same as the isotope order in
-    the corresponding compostion list.
-
-    Output:
-    fresh: key:value fresh recipe format
-    spent: key:value spent recipe format
+    Returns
+    -------
+    fresh: dictionary of fresh fuel
+    spent: dictionary of spent fuel
 
     """
 
-    # first, the function checks that the id lists and
-    # composition lists are equal in length
     assert len(fresh_id) == len(
-        fresh_comp), 'The lengths of fresh_id and fresh_comp are not equal'
+        fresh_comp), 'You are missing a fresh id or composition'
     assert len(spent_id) == len(
-        spent_comp), 'The lengths of spent_id and spent_comp are not equal'
+        spent_comp), 'You are missing a spent id or composition'
 
-    # next, the function creates an empty dictionary object (note
-    # the curly brackets, {}) and then uses a loop to create each
-    # element of the dictionary, matching the first element of the
-    # id list with the first element of the composition list.  If you
-    # are unfamiliar with dictionary objects, a quick note: dictionaries
-    # cannot use .append() as an array or list could.  Instead,
-    # this function uses .update()
+    # would this be better:
+    # fresh = {}
+    # for index, element in enumerate(fresh_id):
+    # fresh.update({element:fresh_comp[index]})
     fresh = {}
-    for element in range(len(fresh_id)):
-        fresh.update({fresh_id[element]: fresh_comp[element]})
+    for index in range(len(fresh_id)):
+        fresh.update({fresh_id[index]: fresh_comp[index]})
 
     spent = {}
-    for element in range(len(spent_id)):
-        spent.update({spent_id[element]: spent_comp[element]})
+    for index in range(len(spent_id)):
+        spent.update({spent_id[index]: spent_comp[index]})
 
     return fresh, spent
 
@@ -177,17 +144,15 @@ def load_template(template):
     """
     Function reads a jinja2 template.
 
-    Input:
-    template: filename of the desired jinja2 template
+    Parameters
+    ----------
+    template: filename of the template
 
-    Output:  jinja2 template
+    Returns
+    -------
+    output_template: jinja2 template
     """
 
-    # this function only really has one step, which is to
-    # read the desired jinja2 template from file and return it.
-    # This function doesn't really get used on its own, rather,
-    # it is called from within functions that render portions
-    # of the Cyclus input file.
     with open(template, 'r') as input_template:
         output_template = jinja2.Template(input_template.read())
 
@@ -200,89 +165,59 @@ def write_reactor(
         output_name='rendered-reactor.xml'):
     """
 
-    ***Warning!  This function will check to see if there
-    is already a file 'output_name' in the current directory,
-    and if one is found it will be deleted.  Please be aware
-    of this when choosing file names.***
+    Warning:  If output_name already exists in the current directory
+        it will be deleted.
 
-    Function renders the reactor portion of the Cyclus input file.
+    Function renders the reactor portion of the CYCLUS input file.
 
-    Input:
-    reactor_data: the reactor data, as a pandas dataframe
+    Parameters
+    ----------
+    reactor_data: pandas dataframe
     reactor_template: name of reactor template file
-    output_name: filename of rendered reactor input
-    default: 'rendered-reactor.xml'
+    output_name: filename of rendered reactor input,
+        default: 'rendered-reactor.xml'
 
-    Output:
-    rendered reactor input filename
+    Returns
+    -------
+    output_name
 
     """
 
-    # first, it will check to see if the file named by
-    # output_name exists, and if it does, deletes it
     if os.path.exists('./' + output_name) is True:
         os.remove(output_name)
 
-    # then, the previously defined load_template function
-    # is used to get the jinja2 template.
     template = load_template(reactor_template)
 
-    # This step is a quick example of how one might specify
-    # and input the specifications of certain reactor types.
-    # Here, PWR and BWRs are used, but this could be done with
-    # any current reactor model, provided you have all the relevant
-    # information.  This function will also
-    # run if you input a reactor type not listed, but it prints a
-    # warning and just uses PWR specs.
-
-    # assem_size is the weight of the assembly in kg, n_assem_core
-    # is the number of assemblies per core, and n_assem_batch is
-    # the number of assemblies per batch.  For more information about
-    # Cycamore archetypes and the input variables in them, go to
-    # http://fuelcycle.org/user/cycamoreagents.html#cycamore-reactor
     PWR_cond = {'assem_size': 33000, 'n_assem_core': 3, 'n_assem_batch': 1}
 
     BWR_cond = {'assem_size': 33000, 'n_assem_core': 3, 'n_assem_batch': 1}
 
-    reactor_data = reactor_data.drop(['Country', 'Operator'], 'columns')
+    reactor_data = reactor_data.drop(['Country', 'Operator'], axis=1)
     reactor_data = reactor_data.drop_duplicates()
 
-    # first, the function checks if it is dealing with data for a single
-    # reactor, or multiple reactors.
-    if len(reactor_data) == 1:
+    for row in reactor_data.index:
 
-        # these are the steps for a single reactor input.  There is
-        # only one element in the reactor data list, so '0' can be
-        # used in .iloc if you are unfamiliar with dataframes, and
-        # .iloc and loc, it may be helpful to look up the documentation.
-        # In brief, .iloc can index the data frame using integer,
-        # postion-based indexing, or a boolean array.  .loc, on the
-        # other hand, uses labels.  Notice that the labels.loc accepts
-        # are the same as our header - this is not coincidence.
-
-        # this first checks for the type of reactor, and renders
-        # the correct information based on the reactor type.
-        if reactor_data.iloc[0, :].loc['Type'] == 'PWR':
+        if reactor_data.loc[row, 'Type'] == 'PWR':
             reactor_body = template.render(
-                reactor_name=reactor_data.iloc[0, :].loc['Reactor Name'],
+                reactor_name=reactor_data.loc[row, 'Reactor Name'],
                 assem_size=PWR_cond['assem_size'],
                 n_assem_core=PWR_cond['n_assem_core'],
                 n_assem_batch=PWR_cond['n_assem_batch'],
-                capacity=reactor_data.iloc[0, :].loc['Net Electric Capacity'])
+                capacity=reactor_data.loc[row, 'Net Electric Capacity'])
 
             with open(output_name, 'a+') as output:
-                output.write(reactor_body)
+                output.write(reactor_body + "\n \n")
 
-        elif reactor_data.iloc[0, :].loc['Type'] == 'BWR':
+        elif reactor_data.loc[row, 'Type'] == 'BWR':
             reactor_body = template.render(
-                reactor_name=reactor_data.iloc[0, :].loc['Reactor Name'],
+                reactor_name=reactor_data.loc[row, 'Reactor Name'],
                 assem_size=BWR_cond['assem_size'],
                 n_assem_core=BWR_cond['n_assem_core'],
                 n_assem_batch=BWR_cond['n_assem_batch'],
-                capacity=reactor_data.iloc[0, :].loc['Net Electric Capacity'])
+                capacity=reactor_data.loc[row, 'Net Electric Capacity'])
 
             with open(output_name, 'a+') as output:
-                output.write(reactor_body)
+                output.write(reactor_body + "\n \n")
 
         else:
             print(
@@ -290,60 +225,15 @@ def write_reactor(
                 'been given.  Using placeholder values.')
 
             reactor_body = template.render(
-                reactor_name=reactor_data.iloc[0, :].loc['Reactor Name'],
+                reactor_name=reactor_data.loc[row, 'Reactor Name'],
                 assem_size=PWR_cond['assem_size'],
                 n_assem_core=PWR_cond['n_assem_core'],
                 n_assem_batch=PWR_cond['n_assem_batch'],
-                capacity=reactor_data.iloc[0, :].loc['Net Electric Capacity'])
+                capacity=reactor_data.loc[row, 'Net Electric Capacity'])
 
             with open(output_name, 'a+') as output:
-                output.write(reactor_body)
+                output.write(reactor_body + "\n \n")
 
-    else:
-
-        # This does what the above if statement does,
-        # with an added for loop to accommodate data for multiple reactors.
-        for element in range(len(reactor_data)):
-
-            if reactor_data.iloc[element, :].loc['Type'] == 'PWR':
-                reactor_body = template.render(
-                    reactor_name=reactor_data.iloc[element, :].loc['Reactor Name'],
-                    assem_size=PWR_cond['assem_size'],
-                    n_assem_core=PWR_cond['n_assem_core'],
-                    n_assem_batch=PWR_cond['n_assem_batch'],
-                    capacity=reactor_data.iloc[element, :].loc['Net Electric Capacity'])
-
-                with open(output_name, 'a+') as output:
-                    output.write(reactor_body + "\n \n")
-
-            elif reactor_data.iloc[element, :].loc['Type'] == 'BWR':
-                reactor_body = template.render(
-                    reactor_name=reactor_data.iloc[element, :].loc['Reactor Name'],
-                    assem_size=BWR_cond['assem_size'],
-                    n_assem_core=BWR_cond['n_assem_core'],
-                    n_assem_batch=BWR_cond['n_assem_batch'],
-                    capacity=reactor_data.iloc[element, :].loc['Net Electric Capacity'])
-
-                with open(output_name, 'a+') as output:
-                    output.write(reactor_body + "\n \n")
-
-            else:
-                print(
-                    'Warning: specifications of this reactor type have not' +
-                    'been given.  Using placeholder values.')
-
-                reactor_body = template.render(
-                    reactor_name=reactor_data.iloc[element, :].loc['Reactor Name'],
-                    assem_size=PWR_cond['assem_size'],
-                    n_assem_core=PWR_cond['n_assem_core'],
-                    n_assem_batch=PWR_cond['n_assem_batch'],
-                    capacity=reactor_data.iloc[element, :].loc['Net Electric Capacity'])
-
-                with open(output_name, 'a+') as output:
-                    output.write(reactor_body + "\n \n")
-
-    # the filename of the rendered reactor is
-    # returned to use it as an input later
     return output_name
 
 
@@ -354,63 +244,56 @@ def write_region(
         output_name='rendered-region.xml'):
     """
 
-    ***Warning!  This function will check to see if
-    there is already a file 'output_name' in the current
-    directory, and if one is found it will be deleted.
-    Please be aware of this when choosing file names.***
+    Warning:  If output_name already exists in the current directory
+        it will be deleted.
 
-    Function renders the region portion of the Cyclus input file.
+    Function renders the region portion of the CYCLUS input file.
 
-    Input:
+    Parameters
+    ----------
     reactor_data: the reactor data, as a pandas dataframe.
-    deployment data: Dictionary object giving values for
-    initial deployment of each facility type,
-        key names: n_mine, n_enrichment, n_reactor, n_repository
+    deployment data: dictionary of initial deployment
+        key names: n_mine, n_enrichment, n_repository
     region_template: name of region template file
     output_name: filenname of rendered region,
         default: 'rendered-region.xml'
 
-    Output:
-    rendered region input filename
+    Returns
+    -------
+    output_name
 
     """
-    # first, if the file output_name already exists, it is deleted.
+
     if os.path.exists('./' + output_name) is True:
         os.remove(output_name)
 
-    # then the region template is loaded.
     template = load_template(region_template)
 
-    # the function splits between multiple and single data sets,
-    # then renders the region and writes it to the file output_name.
-    # .iloc and .loc are used to obtain specific elements within the
-    # reactor_data dataframe.
+    reactor_data = reactor_data.drop('Type', axis=1)
 
-    reactor_data = reactor_data.drop(['Type'], 'columns')
-    reactor_data = reactor_data.groupby(
-        reactor_data.columns.tolist()).size().reset_index().rename(
-        columns={
-            0: 'Number Reactors'})
+    columns = reactor_data.columns.tolist()
+    reactor_data = reactor_data.groupby(columns).size()
+    reactor_data = reactor_data.reset_index()
+    reactor_data = reactor_data.rename(columns={0: 'Number'})
 
     country_reactors = {}
     countries_keys = reactor_data.loc[:, 'Country'].drop_duplicates()
     operator_keys = reactor_data.loc[:, 'Operator'].drop_duplicates()
 
-    for country in countries_keys.tolist():
+    for country in countries_keys:
 
         country_operators = {}
-        for operator in operator_keys.tolist():
+        for operator in operator_keys:
 
             reactor_dict = {}
-            data_loop = reactor_data.query(
-                'Country == @country & Operator == @operator ')
+            command = 'Country == @country & Operator == @operator '
+            data_loop = reactor_data.query(command)
 
-            for element in range(len(data_loop)):
-                reactor_dict[data_loop.iloc[element,
-                                            :].loc['Reactor Name']] = [data_loop.iloc[element,
-                                                                                      :].loc['Number Reactors'],
-                                                                       data_loop.iloc[element,
-                                                                                      :].loc['Net Electric Capacity']]
+            for i in data_loop.index:
+                name = data_loop.loc[i, 'Reactor Name']
+                number = data_loop.loc[i, 'Number']
+                capacity = data_loop.loc[i, 'Net Electric Capacity']
+                reactor_dict[name] = [number, capacity]
 
             country_operators[operator] = reactor_dict
 
@@ -422,8 +305,6 @@ def write_region(
     with open(output_name, 'a+') as output:
         output.write(region_body)
 
-    # the filename of the rendered region file is returned
-    # to be used as an input later
     return output_name
 
 
@@ -434,38 +315,31 @@ def write_recipes(
         output_name='rendered-recipe.xml'):
     """
 
-    ***Warning!  This function will check to see if
-    there is already a file 'output_name' in the current
-    directory,and if one is found it will be deleted.
-    Please be aware of this when choosing file names.***
+    Warning:  If output_name already exists in the current directory
+        it will be deleted.
 
-    Function renders the recipe portion of the Cyclus input file.
+    Function renders the recipe portion of the CYCLUS input file.
 
-    Input:
-    fresh: dictionary object, in id:comp format, containing
-        the isotope names and compositions
+    Parameters
+    ----------
+    fresh: dictionary containing the isotope names and compositions
         (in mass basis) for fresh fuel
     spent: as fresh_comp, but for spent fuel
     recipe_template: name of recipe template file
-    output_name: desired name of output file,
+    output_name: name of output file,
         default: 'rendered-recipe.xml'
 
-    Output:
-    rendered recipe input file
+    Returns
+    -------
+    ouput_name
 
     """
 
-    # if a file named output_name already exists, it's deleted.
     if os.path.exists('./' + output_name) is True:
         os.remove(output_name)
 
-    # load_template is used to load the recipe template
     template = load_template(recipe_template)
 
-    # There is a loop within the recipe template, that creates
-    # a new <nuclide></nuclide> subsection for each element
-    # in the fresh and spent fuel dictionaries, which is why
-    # a loop does not need to be used here.
     recipe_body = template.render(
         fresh_fuel=fresh,
         spent_fuel=spent)
@@ -473,7 +347,6 @@ def write_recipes(
     with open(output_name, 'w') as output:
         output.write(recipe_body)
 
-    # the output filename is returned, to be used later.
     return output_name
 
 
@@ -486,40 +359,33 @@ def write_main_input(
         output_name='rendered-main-input.xml'):
     """
 
-    ***Warning!  This function will check to see if there
-    is already a file 'output_name' in the current directory,
-    and if one is found it will be deleted.
-    Please be aware of this when choosing file names.***
+    Warning:  If output_name already exists in the current directory
+        it will be deleted.
 
-    Function renders the final, main input file for a Cyclus simulation.
+    Function renders the final, main input file for a CYCLUS simulation.
 
-    Input:
-    simulation_parameters: specifcs of cyclus simulation,
-        containing the data: [duration, start month, start year]
-    reactor_file: rendered reactor portion
+    Parameters
+    ----------
+    simulation_parameters: parameters of cyclus simulation,
+        containing: [duration, start month, start year,decay]
+    reactor_file: rendered reactor file
     region_file: rendered region file
     recipe_file: rendered recipe file
     main_input_template: name of main input template file
     output_name: desired name of output file,
         default: 'rendered-main-input.xml'
 
-    Output:
-    rendered Cyclus input file
+    Returns
+    -------
+    output_name
 
     """
 
-    # if a file named output_name already exists, it is deleted.
     if os.path.exists('./' + output_name) is True:
         os.remove(output_name)
 
-    # the main input template is loaded using load_template
     template = load_template(input_template)
 
-    # the next three steps read the rendered reactor, region,
-    # and recipe portions, that were
-    # made using write_reactor, write_region, and write_recipes,
-    # into the notebook.  By assigning them to variables,
-    # they can be called when the body of the template is rendered.
     with open(reactor_file, 'r') as reactorf:
         reactor = reactorf.read()
 
@@ -529,19 +395,6 @@ def write_main_input(
     with open(recipe_file, 'r') as recipef:
         recipe = recipef.read()
 
-    # because the reactor, region, and recipe portions were
-    # already rendered, the function does not need to check
-    # for how many reactors were loaded, index using .iloc
-    # and .loc, or directly use any of the data aside from the
-    # input that describes when the simulation starts and its duration.
-    # Note that reactor, region, and recipe all contain the entire
-    # .xml file that was rendered. In the main input template,
-    # the variables reactor_input, region_input, and recipe_input
-    # are only contained within the root <simulation></simulation>
-    # brackets.  It may be helpful to compare the blank template
-    # used for reactor, region, or recipe to the main input
-    # template to see the proper syntax for inserting a
-    # pre-rendered xml file into another.
     main_input = template.render(
         duration=simulation_parameters[0],
         start_month=simulation_parameters[1],
@@ -554,9 +407,6 @@ def write_main_input(
     with open(output_name, 'w') as output:
         output.write(main_input)
 
-    # nothing is returned, but the file output_name
-    # should appear once this function completes.
-
 
 # analysis functions:
 
@@ -565,18 +415,18 @@ def get_cursor(file_name):
     """
     Connects and returns a cursor to an sqlite output file
 
-    Inputs:
+    Parameters
+    ----------
 
     file_name: str
         name of the sqlite file
 
-    Outputs:
+    Returns
+    -------
 
-    sqlite cursor3
+    sqlite cursor
     """
 
-    # a cursor is made that points to the sqlite
-    # file named "file_name"
     con = lite.connect(file_name)
     con.row_factory = lite.Row
     return con.cursor()
@@ -588,22 +438,22 @@ def get_agent_ids(cur, archetype):
         agententry table has the following format:
             SimId / AgentId / Kind / Spec /
             Prototype / ParentID / Lifetime / EnterTime
-    Inputs:
+
+    Parameters
+    ----------
 
     cur: cursor
         sqlite cursor3
 
     archetype: str
         agent's archetype specification
-    Outputs:
+    Returns
+    -------
 
     id_list: list
         list of all agentId strings
     """
-    # note that this gets agent IDs, not the IDs of a specific prototype.
-    # using the cursor to access the right file, .execute goes to the file and
-    # performs the command in " ".  Note that the command is not for python at
-    # all - it is SQL subscripting.
+
     agents = cur.execute("SELECT agentid FROM agententry WHERE spec "
                          "LIKE '%" + archetype + "%' COLLATE NOCASE"
                          ).fetchall()
@@ -615,19 +465,19 @@ def get_prototype_id(cur, prototype):
     """
     Returns agentid of a prototype
 
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
         sqlite cursor
     prototype: str
         name of prototype
 
-    Outputs:
+    Returns
+    -------
     agent_id: list
         list of prototype agent_ids as strings
     """
 
-    # like get-agent_ids, this uses the cursor to access
-    # the sqlite file, then it performs the command in .execute.
     ids = cur.execute('SELECT agentid FROM AgentEntry '
                       'WHERE prototype = "' +
                       str(prototype) + '" COLLATE NOCASE').fetchall()
@@ -640,11 +490,12 @@ def get_timesteps(cur):
     Returns simulation start year, month, duration and
     timesteps (in numpy linspace).
 
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
-        sqlite cursor
 
-    Outputs:
+    Returns
+    -------
     init_year: int
         start year of simulation
     init_month: int
@@ -655,15 +506,9 @@ def get_timesteps(cur):
         linspace up to duration
     """
 
-    # this executes the command, and assigns the data from this query to info
     info = cur.execute('SELECT initialyear, initialmonth, '
                        'duration FROM info').fetchone()
 
-    # then, the separate variables init_year, init_month, and duration
-    # are found by indexing info at the correct header.  Notice that
-    # the .execute command selects "initialyear", "initialmonth"
-    # etc., and these names are exactly what the function uses to index
-    # info.  timestep is found using the numpy (as np) linspace function.
     init_year = info['initialyear']
     init_month = info['initialmonth']
     duration = info['duration']
@@ -675,7 +520,9 @@ def get_timesteps(cur):
 def get_timeseries(in_list, duration, kg_to_tons):
     """
     Returns a timeseries list from in_list data.
-    Inputs:
+
+    Parameters
+    ----------
     in_list: list
         list of data to be created into timeseries
         list[0] = time
@@ -685,12 +532,11 @@ def get_timeseries(in_list, duration, kg_to_tons):
     kg_to_tons: bool
         if True, list returned has units of tons
         if False, list returned as units of kilograms
-    Outputs:
+    Returns
+    -------
     timeseries list of commodities stored in in_list
     """
 
-    # given a data input, it puts the data into a list of
-    # the data quantity over time
     value = 0
     value_timeseries = []
     array = np.array(in_list)
@@ -707,7 +553,8 @@ def get_timeseries(in_list, duration, kg_to_tons):
 def get_timeseries_cum(in_list, duration, kg_to_tons):
     """
     Returns a timeseries list from in_list data.
-    Inputs:
+    Parameters
+    ----------
     in_list: list
         list of data to be created into timeseries
         list[0] = time
@@ -718,11 +565,11 @@ def get_timeseries_cum(in_list, duration, kg_to_tons):
     kg_to_tons: bool
         if True, list returned has units of tons
         if False, list returned as units of kilograms
-    Outputs:
+    Returns
+    -------
     timeseries of commodities in kg or tons
     """
 
-    # as get_timeseries, but a cumulative time series of the quantity
     value = 0
     value_timeseries = []
     array = np.array(in_list)
@@ -740,7 +587,8 @@ def exec_string(in_list, search, request_colmn):
     """Generates sqlite query command to select things and
         inner join resources and transactions.
 
-    Inputs:
+    Parameters
+    ----------
     in_list: list
         list of items to specify search
         This variable will be inserted as sqlite
@@ -754,14 +602,12 @@ def exec_string(in_list, search, request_colmn):
         This variable will be inserted as sqlite
         query arugment following the SELECT keyword
 
-    Outputs:
+    Returns
+    -------
     query: str
         sqlite query command.
     """
 
-    # this function isn't used on its own - rather
-    # it's used within other functions to execute
-    # complex queries on the resources and transaction tables.
     if len(in_list) == 0:
         raise Exception('Cannot create an exec_string with an empty list')
     if isinstance(in_list[0], str):
@@ -782,7 +628,8 @@ def exec_string(in_list, search, request_colmn):
 def get_isotope_transactions(resources, compositions):
     """Creates a dictionary with isotope name, mass, and time
 
-    Inputs:
+    Parameters
+    ----------
     resources: list of tuples
         resource data from the resources table
         (times, sum(quantity), qualid)
@@ -790,15 +637,13 @@ def get_isotope_transactions(resources, compositions):
         composition data from the compositions table
         (qualid, nucid, massfrac)
 
-    Outputs:
+    Returns
+    -------
     transactions: dictionary
         dictionary with "key=isotope, and
         value=list of tuples (time, mass)
     """
 
-    # transactions is a dictionary object where the key is the
-    # isotope name, and values is a list of tuples in the format (time, mass).
-    # time is in months, and mass is in kg.
     transactions = collections.defaultdict(list)
     for res in resources:
         for comp in compositions:
@@ -814,7 +659,8 @@ def get_waste_dict(isotope_list, time_mass_list, duration):
     """Given an isotope, mass and time list, creates a dictionary
        With key as isotope and time series of the isotope mass.
 
-    Inputs:
+    Parameters
+    ----------
     isotope_list: list
         list with all the isotopes from resources table
     time_mass_list: list
@@ -824,39 +670,19 @@ def get_waste_dict(isotope_list, time_mass_list, duration):
     duration: integer
         simulation duration
 
-    Outputs:
+    Returns
+    -------
     waste_dict: dictionary
         dictionary with "key=isotope, and
         value=mass timeseries of each unique isotope"
     """
 
-    # first, the individual key strings are pulled into an array,
-    # which makes it easier to use them later
     keys = []
     for key in isotope_list:
         keys.append(key)
 
-    # initialize waste_dict
     waste_dict = {}
 
-    # the next steps are the same for any number of isotopes in
-    # the recipe, but if there is more than one, a loop is added to
-    # accommodate having multple isotopes.
-
-    # this function, in practice, is called using the data from the
-    # get_isotope_transactions function.  If you look at this data,
-    # you will notice that when there was no event, i.e., no influx
-    # or outflux of material, the data point for that time step does not exist.
-    # this is not particularly helpful for plotting data.  The steps below
-    # pull out the time and mass values from within the tuple, and create
-    # separate arrays of each (called times and masses, respectively)
-    # then, in order to "fill in" the data points where there were no events,
-    # new arrays, called times1 masses1, are created.  An empty array
-    # called nums is also made, which is the length of the simulation duration.
-    # then, a loop is used to check if the timestep in nums is already in
-    # times1.  If it is not, the .insert function is used to put the
-    # data point into the correct position, and similarly, a data point
-    # is inserted in masses1 in this position, with a value of 0
     if len(time_mass_list) == 1:
         times = []
         masses = []
@@ -910,7 +736,8 @@ def plot_in_out_flux(
         is_tot=False):
     """plots timeseries influx/ outflux from facility name in kg.
 
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
         sqlite cursor
     facility: str
@@ -926,18 +753,13 @@ def plot_in_out_flux(
         true: add isotope masses over time
         false: do not add isotope masses at each timestep
 
-    Outputs:
+    Returns
+    -------
     none
     """
 
-    # first, the id of the prototype in question is pulled using
-    # get_prototype_id
     agent_ids = get_prototype_id(cur, facility)
 
-    # then, the resources array is found using exec_string.  note that if
-    # influx+bool is true (the function is plotting influx),
-    # exec_string uses recieverId.  If, instead, the influx_bool is false,
-    # and outflux is being plotted, exec_string uses senderId
     if influx_bool is True:
         resources = cur.execute(exec_string(agent_ids,
                                             'transactions.receiverId',
@@ -951,39 +773,23 @@ def plot_in_out_flux(
                                             'qualid') +
                                 ' GROUP BY time, qualid').fetchall()
 
-    # then, isotope composition data is collected from the SQL tables.
     compositions = cur.execute('SELECT qualid, nucid, massfrac '
                                'FROM compositions').fetchall()
 
-    # simulation data is pulled using get_timesteps
     init_year, init_month, duration, timestep = get_timesteps(cur)
 
-    # data on the time of each material transaction and the amount of
-    # material moved during the transaction for each isotope is pulled
-    # using get_isotope_transactions.
     transactions = get_isotope_transactions(resources, compositions)
 
-    # because transactions is a dictionary, it is easier to manipulate the
-    # data if the values are first pulled out and appended to an array.
-    # time_mass is an array of arrays, with each sub array corresponding
-    # to each value entry from transactions.
     time_mass = []
 
     for key in transactions.keys():
 
         time_mass.append(transactions[key])
 
-    # waste_dict then takes the data from time_mass, fills in the missing
-    # data points, and returns a dictionary with key = isotope and
-    # value = time series of isotope mass.
     waste_dict = get_waste_dict(transactions.keys(),
                                 time_mass,
                                 duration)
 
-    # the following plots the material transaction data based on the
-    # cumulative and total options chosen by the user.  Because mass
-    # values of zero actually correspond to no event taking place, these
-    # values are converted to nan and therefore, not plotted.
     if not is_cum and is_tot:
         keys = []
         for key in waste_dict.keys():
@@ -1084,10 +890,12 @@ def plot_in_out_flux(
 
 def u_util_calc(cur):
     """Returns fuel utilization factor of fuel cycle
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
         sqlite cursor
-    Outputs:
+    Returns
+    -------
     u_util_timeseries: numpy array
         Timeseries of Uranium utilization factor
 
@@ -1116,12 +924,14 @@ def nat_u_timeseries(cur, is_cum=True):
     """Finds natural uranium supply from source
         Since currently the source supplies all its capacity,
         the timeseriesenrichmentfeed is used.
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
         sqlite cursor
     is_cum: bool
         gets cumulative timeseris if True, monthly value if False
-    Outputs:
+    Returns
+    -------
     get_timeseries: function
         calls a function that returns timeseries list of natural U
         demand from enrichment [MTHM]
@@ -1140,12 +950,14 @@ def nat_u_timeseries(cur, is_cum=True):
 
 def fuel_into_reactors(cur, is_cum=True):
     """Finds timeseries of mass of fuel received by reactors
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
         sqlite cursor
     is_cum: bool
         gets cumulative timeseris if True, monthly value if False
-    Outputs:
+    Returns
+    -------
     timeseries list of fuel into reactors [tons]
     """
 
@@ -1167,29 +979,23 @@ def fuel_into_reactors(cur, is_cum=True):
 
 def plot_swu(cur, is_cum=True):
     """returns dictionary of swu timeseries for each enrichment plant
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
         sqlite cursor
     is_cum: bool
         gets cumulative timeseris if True, monthly value if False
-    Outputs:
+    Returns
+    -------
     swu_dict: dictionary
         dictionary with "key=Enrichment (facility number), and
         value=swu timeseries list"
     """
 
-    # first, an empty dictionary is created.  then, the IDs of each
-    # enrichment plant are pulled, and the simulation time data are
-    # retrieved using get_timesteps.
     swu_dict = {}
     agentid = get_agent_ids(cur, 'Enrichment')
     init_year, init_month, duration, timestep = get_timesteps(cur)
 
-    # then, for each agent ID pulled from the CYCLUS data, the SWU data
-    # for that ID is fetched from the SQL database and assigned to
-    # swu_data.  Then, this data is put into timeseries form.  This final
-    # timeseries format of the data is what is actually assigned to the
-    # value in the swu_dict dictionary.
     for num in agentid:
         swu_data = cur.execute('SELECT time, value '
                                'FROM timeseriesenrichmentswu '
@@ -1201,7 +1007,6 @@ def plot_swu(cur, is_cum=True):
 
         swu_dict['Enrichment_' + str(num)] = swu_timeseries
 
-    # below, the data from swu_dict is plotted.
     keys = []
     for key in swu_dict.keys():
         keys.append(key)
@@ -1273,18 +1078,18 @@ def plot_power_ot(cur, is_cum=True, is_tot=False):
     Function creates a dictionary of power from each reactor over
     time, then plots it according to the options set by the user
     when the function is called.
-    Inputs:
+    Parameters
+    ----------
     cur: sqlite cursor
         sqlite cursor
     is_cum: bool
         gets cumulative timeseris if True, monthly value if False
-    Outputs:
+    Returns
+    -------
     none, but it shows the power plot.
 
     """
 
-    # This function does exactly what plot swu does, but it uses the
-    # data pulled from timeseriespower instead.
     power_dict = {}
     agentid = get_agent_ids(cur, 'Reactor')
     init_year, init_month, duration, timestep = get_timesteps(cur)
