@@ -1,5 +1,5 @@
 <facility>
-  <name>{{capacity}}MWe {{reactor_name}}</name>
+  <name>{{capacity}}MWe_{{reactor_name}}</name>
   <config>
     <Reactor>
       <fuel_incommods> <val>fresh-uox</val> </fuel_incommods>

@@ -46,17 +46,9 @@ def write_csv(header, raw_input, filename='csv-data.csv'):
 
     """
 
-    # checks to see if the file "filename" already exists in the
-    # current directory.  If it does,
-    # it is deleted.
     if os.path.exists('./' + filename) is True:
         os.remove(filename)
 
-    # next, it checks to see if the raw data is a series of lists,
-    # or just one set of data.
-    # if the raw input is a series of lists, it is first re-organized
-    # into a list of lists where each
-    # element contains the data of a single reactor.
     if isinstance(raw_input[0], list):
 
         data_input = []
@@ -69,18 +61,12 @@ def write_csv(header, raw_input, filename='csv-data.csv'):
                 placeholder = raw_input[index]
                 data_input[element].append(placeholder[element])
 
-        # once it is in the right format, it is written to the csv file.
         with open(filename, 'a+') as file:
             w = csv.writer(file)
             w.writerow(header)
             for element in range(len(data_input)):
                 w.writerow(data_input[element])
-
-    # if the first element was not a list, it means the raw
-    # input contains the data for only
-    # one reactor, and does not need to be reorganized.
-    # Instead, the raw input is directly written
-    # to the csv file.
+                
     else:
         with open(filename, 'a+') as file:
             w = csv.writer(file)
@@ -98,18 +84,10 @@ def import_csv(csv_file):
     Output:
     reactor_data: the data contained in the csv file as a dataframe
 
-    note:  this function requires pandas imported as pd
+    note:  this function automatically skips the first row
+        because it's assumed it is a header
 
     """
-
-    # This function takes the contents of the csv file and reads
-    # them into a dataframe.  One important thing to note is that
-    # the functions used later, specifically write_reactor and
-    # write_region, expect that the header name for country, reactor name,
-    # reactor type, net electric capacity, and operator are 'Country',
-    # 'Reactor Name', 'Type', 'Net Electric Capacity', and 'Operator,
-    # respectively.  These headers are used to find values within the
-    # dataframe.
 
     reactor_data = (
         pd.read_csv(
@@ -148,27 +126,23 @@ def recipe_dict(fresh_id, fresh_comp, spent_id, spent_comp):
 
     """
 
-    # first, the function checks that the id lists and
-    # composition lists are equal in length
     assert len(fresh_id) == len(
         fresh_comp), 'The lengths of fresh_id and fresh_comp are not equal'
     assert len(spent_id) == len(
         spent_comp), 'The lengths of spent_id and spent_comp are not equal'
+    
+    #which is better?
+    #fresh = {}
+    #for index, element in enumerate(fresh_id):
+        #fresh.update({element: fresh_comp[index]})
 
-    # next, the function creates an empty dictionary object (note
-    # the curly brackets, {}) and then uses a loop to create each
-    # element of the dictionary, matching the first element of the
-    # id list with the first element of the composition list.  If you
-    # are unfamiliar with dictionary objects, a quick note: dictionaries
-    # cannot use .append() as an array or list could.  Instead,
-    # this function uses .update()
     fresh = {}
-    for element in range(len(fresh_id)):
-        fresh.update({fresh_id[element]: fresh_comp[element]})
+    for index in range(len(fresh_id)):
+        fresh.update({fresh_id[index]: fresh_comp[index]})
 
     spent = {}
-    for element in range(len(spent_id)):
-        spent.update({spent_id[element]: spent_comp[element]})
+    for index in range(len(spent_id)):
+        spent.update({spent_id[index]: spent_comp[index]})
 
     return fresh, spent
 
@@ -183,11 +157,6 @@ def load_template(template):
     Output:  jinja2 template
     """
 
-    # this function only really has one step, which is to
-    # read the desired jinja2 template from file and return it.
-    # This function doesn't really get used on its own, rather,
-    # it is called from within functions that render portions
-    # of the Cyclus input file.
     with open(template, 'r') as input_template:
         output_template = jinja2.Template(input_template.read())
 
@@ -218,71 +187,41 @@ def write_reactor(
 
     """
 
-    # first, it will check to see if the file named by
-    # output_name exists, and if it does, deletes it
     if os.path.exists('./' + output_name) is True:
         os.remove(output_name)
 
-    # then, the previously defined load_template function
-    # is used to get the jinja2 template.
     template = load_template(reactor_template)
 
-    # This step is a quick example of how one might specify
-    # and input the specifications of certain reactor types.
-    # Here, PWR and BWRs are used, but this could be done with
-    # any current reactor model, provided you have all the relevant
-    # information.  This function will also
-    # run if you input a reactor type not listed, but it prints a
-    # warning and just uses PWR specs.
-
-    # assem_size is the weight of the assembly in kg, n_assem_core
-    # is the number of assemblies per core, and n_assem_batch is
-    # the number of assemblies per batch.  For more information about
-    # Cycamore archetypes and the input variables in them, go to
-    # http://fuelcycle.org/user/cycamoreagents.html#cycamore-reactor
     PWR_cond = {'assem_size': 33000, 'n_assem_core': 3, 'n_assem_batch': 1}
 
     BWR_cond = {'assem_size': 33000, 'n_assem_core': 3, 'n_assem_batch': 1}
 
-    reactor_data = reactor_data.drop(['Country', 'Operator'], 'columns')
+    reactor_data = reactor_data.drop(['Country', 'Operator'], axis = 1)
     reactor_data = reactor_data.drop_duplicates()
+    
+    for row in reactor_data.index:
 
-    # first, the function checks if it is dealing with data for a single
-    # reactor, or multiple reactors.
-    if len(reactor_data) == 1:
-
-        # these are the steps for a single reactor input.  There is
-        # only one element in the reactor data list, so '0' can be
-        # used in .iloc if you are unfamiliar with dataframes, and
-        # .iloc and loc, it may be helpful to look up the documentation.
-        # In brief, .iloc can index the data frame using integer,
-        # postion-based indexing, or a boolean array.  .loc, on the
-        # other hand, uses labels.  Notice that the labels.loc accepts
-        # are the same as our header - this is not coincidence.
-
-        # this first checks for the type of reactor, and renders
-        # the correct information based on the reactor type.
-        if reactor_data.iloc[0, :].loc['Type'] == 'PWR':
+        if reactor_data.loc[row,'Type'] == 'PWR':
             reactor_body = template.render(
-                reactor_name=reactor_data.iloc[0, :].loc['Reactor Name'],
+                reactor_name=reactor_data.loc[row,'Reactor Name'],
                 assem_size=PWR_cond['assem_size'],
                 n_assem_core=PWR_cond['n_assem_core'],
                 n_assem_batch=PWR_cond['n_assem_batch'],
-                capacity=reactor_data.iloc[0, :].loc['Net Electric Capacity'])
+                capacity=reactor_data.loc[row,'Net Electric Capacity'])
 
             with open(output_name, 'a+') as output:
-                output.write(reactor_body)
+                output.write(reactor_body + "\n \n")
 
-        elif reactor_data.iloc[0, :].loc['Type'] == 'BWR':
+        elif reactor_data.loc[row,'Type'] == 'BWR':
             reactor_body = template.render(
-                reactor_name=reactor_data.iloc[0, :].loc['Reactor Name'],
+                reactor_name=reactor_data.loc[row,'Reactor Name'],
                 assem_size=BWR_cond['assem_size'],
                 n_assem_core=BWR_cond['n_assem_core'],
                 n_assem_batch=BWR_cond['n_assem_batch'],
-                capacity=reactor_data.iloc[0, :].loc['Net Electric Capacity'])
+                capacity=reactor_data.loc[row,'Net Electric Capacity'])
 
             with open(output_name, 'a+') as output:
-                output.write(reactor_body)
+                output.write(reactor_body + "\n \n")
 
         else:
             print(
@@ -290,60 +229,15 @@ def write_reactor(
                 'been given.  Using placeholder values.')
 
             reactor_body = template.render(
-                reactor_name=reactor_data.iloc[0, :].loc['Reactor Name'],
+                reactor_name=reactor_data.iloc[row, :].loc['Reactor Name'],
                 assem_size=PWR_cond['assem_size'],
                 n_assem_core=PWR_cond['n_assem_core'],
                 n_assem_batch=PWR_cond['n_assem_batch'],
-                capacity=reactor_data.iloc[0, :].loc['Net Electric Capacity'])
+                capacity=reactor_data.iloc[row, :].loc['Net Electric Capacity'])
 
             with open(output_name, 'a+') as output:
-                output.write(reactor_body)
-
-    else:
-
-        # This does what the above if statement does,
-        # with an added for loop to accommodate data for multiple reactors.
-        for element in range(len(reactor_data)):
-
-            if reactor_data.iloc[element, :].loc['Type'] == 'PWR':
-                reactor_body = template.render(
-                    reactor_name=reactor_data.iloc[element, :].loc['Reactor Name'],
-                    assem_size=PWR_cond['assem_size'],
-                    n_assem_core=PWR_cond['n_assem_core'],
-                    n_assem_batch=PWR_cond['n_assem_batch'],
-                    capacity=reactor_data.iloc[element, :].loc['Net Electric Capacity'])
-
-                with open(output_name, 'a+') as output:
-                    output.write(reactor_body + "\n \n")
-
-            elif reactor_data.iloc[element, :].loc['Type'] == 'BWR':
-                reactor_body = template.render(
-                    reactor_name=reactor_data.iloc[element, :].loc['Reactor Name'],
-                    assem_size=BWR_cond['assem_size'],
-                    n_assem_core=BWR_cond['n_assem_core'],
-                    n_assem_batch=BWR_cond['n_assem_batch'],
-                    capacity=reactor_data.iloc[element, :].loc['Net Electric Capacity'])
-
-                with open(output_name, 'a+') as output:
-                    output.write(reactor_body + "\n \n")
-
-            else:
-                print(
-                    'Warning: specifications of this reactor type have not' +
-                    'been given.  Using placeholder values.')
-
-                reactor_body = template.render(
-                    reactor_name=reactor_data.iloc[element, :].loc['Reactor Name'],
-                    assem_size=PWR_cond['assem_size'],
-                    n_assem_core=PWR_cond['n_assem_core'],
-                    n_assem_batch=PWR_cond['n_assem_batch'],
-                    capacity=reactor_data.iloc[element, :].loc['Net Electric Capacity'])
-
-                with open(output_name, 'a+') as output:
-                    output.write(reactor_body + "\n \n")
-
-    # the filename of the rendered reactor is
-    # returned to use it as an input later
+                output.write(reactor_body + "\n \n")
+                
     return output_name
 
 

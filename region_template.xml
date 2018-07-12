@@ -2,7 +2,7 @@
 {% for country, operator in country_reactor_dict.items() -%}
 {% for operators, reactors in operator.items() -%}
 <region>
-  <name>{{country}} {{operators}} Reactors</name>
+  <name>{{country}}_{{operators}}</name>
   <config>
     <NullRegion/>
   </config>
@@ -10,12 +10,12 @@
     <initialfacilitylist>
       {% for reactor_name, reactor_info in reactors.items() -%}
       <entry>
-        <prototype>{{reactor_info[1]}}MWe {{reactor_name}}</prototype>
+        <prototype>{{reactor_info[1]}}MWe_{{reactor_name}}</prototype>
         <number>{{reactor_info[0]}}</number>
       </entry>
       {% endfor -%}
     </initialfacilitylist>
-    <name>{{operators}} in {{country}}</name>
+    <name>{{country}}_{{operators}}_Reactors</name>
     <config>
       <NullInst/>
     </config>
@@ -28,7 +28,7 @@
 
 {% for country, deploy in countries_infra.items() -%}
 <region>
-  <name>{{country}} Infrastructure</name>
+  <name>{{country}}</name>
   <config>
     <NullRegion/>
   </config>
@@ -43,11 +43,11 @@
         <number>{{deploy[1]}}</number>
       </entry>
       <entry>
-        <prototype>NuclearRepository</prototype>
+        <prototype>SNFRepository</prototype>
         <number>{{deploy[2]}}</number>
       </entry>
     </initialfacilitylist>
-    <name>{{country}} Nuclear</name>
+    <name>{{country}}_Nuclear_Infrastructure</name>
     <config>
       <NullInst/>
     </config>

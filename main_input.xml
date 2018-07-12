@@ -75,7 +75,7 @@
   {{reactor_input}}
 
   <facility>
-    <name>NuclearRepository</name>
+    <name>SNFRepository</name>
     <config>
       <Sink>
         <in_commods>
