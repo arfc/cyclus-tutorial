@@ -1,0 +1,92 @@
+<simulation>
+  <control>
+    <duration>{{duration}}</duration>
+    <startmonth>{{start_month}}</startmonth>
+    <startyear>{{start_year}}</startyear>
+    <decay>{{decay}}</decay>
+  </control>
+
+  <archetypes>
+    <spec>
+      <lib>cycamore</lib>
+      <name>Enrichment</name>
+    </spec>
+    <spec>
+      <lib>cycamore</lib>
+      <name>Reactor</name>
+    </spec>
+    <spec>
+      <lib>cycamore</lib>
+      <name>Source</name>
+    </spec>
+    <spec>
+      <lib>cycamore</lib>
+      <name>Sink</name>
+    </spec>
+    <spec>
+      <lib>agents</lib>
+      <name>NullRegion</name>
+    </spec>
+    <spec>
+      <lib>agents</lib>
+      <name>NullInst</name>
+    </spec>
+  </archetypes>
+
+  <commodity>
+    <name>u-ore</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+  <commodity>
+    <name>fresh-uox</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+  <commodity>
+    <name>tails</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+  <commodity>
+    <name>spent-uox</name>
+    <solution_priority>1.0</solution_priority>
+  </commodity>
+
+  <facility>
+    <name>UraniumMine</name>
+    <config>
+      <Source>
+        <outcommod>u-ore</outcommod>
+      </Source>
+    </config>
+  </facility>
+
+  <facility>
+    <name>EnrichmentPlant</name>
+    <config>
+      <Enrichment>
+        <feed_commod>u-ore</feed_commod>
+        <feed_recipe>nat-u</feed_recipe>
+        <product_commod>fresh-uox</product_commod>
+        <tails_commod>tails</tails_commod>
+        <max_feed_inventory>1000000</max_feed_inventory>
+      </Enrichment>
+    </config>
+  </facility>
+
+  {{reactor_input}}
+
+  <facility>
+    <name>SNFRepository</name>
+    <config>
+      <Sink>
+        <in_commods>
+          <val>spent-uox</val>
+        </in_commods>
+      </Sink>
+    </config>
+  </facility>
+
+  {{region_input}}
+
+  {{recipe_input}}
+
+</simulation>
