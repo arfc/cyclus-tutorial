@@ -1,0 +1,16 @@
+Country,Reactor Name,Type,Net Electric Capacity,Operator
+The Beehive,Honeycomb3000,PWR,1000,SeveralBees
+The Beehive,Honeycomb3000,PWR,1500,SeveralBees
+The Beehive,Pollinator,BWR,1000,SeveralBees
+The Beehive,Honeycomb3000,PWR,1000,QueenBee
+The Beehive,Pollinator,BWR,1000,QueenBee
+The Beehive,Honeycomb3000,PWR,1000,QueenBee
+The Beehive,Honeycomb3000,PWR,1500,SeveralBees
+The Beehive,Pollinator,BWR,1000,SeveralBees
+The Beehive,Honeycomb3000,PWR,1000,SeveralBees
+The Other Beehive,Honeycomb3000,PWR,1500,SeveralBees
+The Other Beehive,Pollinator,BWR,1000,SeveralBees
+The Other Beehive,Honeycomb3000,PWR,1000,SeveralBees
+The Other Beehive,Honeycomb3000,PWR,1000,QueenBee
+The Other Beehive,Pollinator,BWR,1000,QueenBee
+The Other Beehive,Honeycomb3000,PWR,1000,QueenBee

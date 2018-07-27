@@ -1,0 +1,34 @@
+<recipe>
+  <name>nat-u</name>
+  <basis>mass</basis>
+  <nuclide>
+    <id>92235</id>
+    <comp>0.00711</comp>
+  </nuclide>
+  <nuclide>
+    <id>92238</id>
+    <comp>0.99289</comp>
+  </nuclide>
+</recipe>
+
+<recipe>
+  <name>fresh-uox</name>
+  <basis>mass</basis>
+  {% for key, value in fresh_fuel.items() -%}
+  <nuclide>
+    <id>{{key}}</id>
+    <comp>{{value}}</comp>
+  </nuclide>
+  {% endfor -%}
+</recipe>
+
+<recipe>
+  <name>spent-uox</name>
+  <basis>mass</basis>
+  {% for key, value in spent_fuel.items() -%}
+  <nuclide>
+    <id>{{key}}</id>
+    <comp>{{value}}</comp>
+  </nuclide>
+  {% endfor -%}
+</recipe>
